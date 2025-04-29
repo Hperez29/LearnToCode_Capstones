@@ -12,70 +12,61 @@ public class FinancialTracker {
         boolean running = true;
 
         while (running) {
-            System.out.println("Home Screen");
-            System.out.println("D) Add Deposit");
-            System.out.println("P) Make Payment (Debit)");
-            System.out.println("L) Ledger");
-            System.out.println("X) Exit");
+            showHomeScreen();
             String choice = scanner.nextLine().toUpperCase();
 
             switch (choice) {
-                case "D":
-                    addTransaction("deposit");
-                    break;
-                case "P":
-                    addTransaction("payment");
-                    break;
-                case "L":
-                    ledgerScreen();
-                    break;
-                case "X":
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Try again.");
+                case "D": addTransaction("deposit"); break;
+                case "P": addTransaction("payment"); break;
+                case "L": ledgerScreen(); break;
+                case "X": running = false; break;
+                default: System.out.println("Invalid option. Try again.");
             }
         }
         scanner.close();
     }
 
+    private static void showHomeScreen() {
+        System.out.println("Home Screen");
+        System.out.println("D) Add Deposit");
+        System.out.println("P) Make Payment (Debit)");
+        System.out.println("L) Ledger");
+        System.out.println("X) Exit");
+    }
+
     public static void addTransaction(String type) {
-        String description, vendor, date, time;
+        String description, vendor;
         double amount;
 
         System.out.print("Enter the description of the transaction: ");
         description = scanner.nextLine();
-
-        if (description.toLowerCase().contains("scrooge mcduck")) {
-            vendor = "Scrooge McDuck";
-        } else if (description.toLowerCase().contains("donald duck")) {
-            vendor = "Donald Duck";
-        } else if (description.toLowerCase().contains("goofy")) {
-            vendor = "Goofy";
-        } else {
-            System.out.print("Enter the vendor: ");
-            vendor = scanner.nextLine();
-        }
+        vendor = getVendor(description);
 
         System.out.print("Enter the amount: ");
         amount = Double.parseDouble(scanner.nextLine());
 
-        // If it's a deposit, amount is positive, otherwise negative for payments
-        if (type.equals("deposit")) {
-            amount = Math.abs(amount);
-        } else if (type.equals("payment")) {
-            amount = -Math.abs(amount);
-        }
+        // Set amount sign based on transaction type
+        amount = type.equals("deposit") ? Math.abs(amount) : -Math.abs(amount);
 
-        // Generate current date and time
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd|HH:mm:ss");
-        date = sdf.format(new Date());
-        time = date.split("\\|")[1]; // Time is the part after the "|"
+        // Get current date and time
+        String dateTime = new SimpleDateFormat("yyyy-MM-dd|HH:mm:ss").format(new Date());
+        String time = dateTime.split("\\|")[1];
 
-        // Create the CSV line
-        String transactionLine = String.format("%s|%s|%s|%s|%.2f", date, time, description, vendor, amount);
+        // Prepare transaction line
+        String transactionLine = String.format("%s|%s|%s|%s|%.2f", dateTime.split("\\|")[0], time, description, vendor, amount);
 
-        // Write transaction to the file
+        writeToFile(transactionLine);
+    }
+
+    private static String getVendor(String description) {
+        if (description.toLowerCase().contains("scrooge mcduck")) return "Scrooge McDuck";
+        if (description.toLowerCase().contains("donald duck")) return "Donald Duck";
+        if (description.toLowerCase().contains("goofy")) return "Goofy";
+        System.out.print("Enter the vendor: ");
+        return scanner.nextLine();
+    }
+
+    private static void writeToFile(String transactionLine) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_NAME, true))) {
             writer.write(transactionLine);
             writer.newLine();
@@ -88,122 +79,101 @@ public class FinancialTracker {
     public static void ledgerScreen() {
         boolean running = true;
         while (running) {
-            System.out.println("Ledger Screen");
-            System.out.println("A) All Transactions");
-            System.out.println("D) Deposits");
-            System.out.println("P) Payments");
-            System.out.println("R) Reports");
-            System.out.println("H) Home");
+            showLedgerScreen();
             String choice = scanner.nextLine().toUpperCase();
 
             switch (choice) {
-                case "A":
-                    displayTransactions("all");
-                    break;
-                case "D":
-                    displayTransactions("deposit");
-                    break;
-                case "P":
-                    displayTransactions("payment");
-                    break;
-                case "R":
-                    reportsScreen();
-                    break;
-                case "H":
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Try again.");
+                case "A": displayTransactions("all"); break;
+                case "D": displayTransactions("deposit"); break;
+                case "P": displayTransactions("payment"); break;
+                case "R": reportsScreen(); break;
+                case "H": running = false; break;
+                default: System.out.println("Invalid option. Try again.");
             }
         }
     }
 
+    private static void showLedgerScreen() {
+        System.out.println("Ledger Screen");
+        System.out.println("A) All Transactions");
+        System.out.println("D) Deposits");
+        System.out.println("P) Payments");
+        System.out.println("R) Reports");
+        System.out.println("H) Home");
+    }
+
     public static void displayTransactions(String type) {
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_NAME))) {
-            String line;
             List<String> transactions = new ArrayList<>();
-            while ((line = reader.readLine()) != null) {
-                transactions.add(line);
-            }
+            String line;
+            while ((line = reader.readLine()) != null) transactions.add(line);
 
-            // Reverse the order to show newest first
             Collections.reverse(transactions);
 
-            for (String transaction : transactions) {
-                String[] parts = transaction.split("\\|");
-                double amount = Double.parseDouble(parts[4]);
-
-                // Filter based on the type if needed
-                if ("all".equals(type) ||
-                        ("deposit".equals(type) && amount > 0) ||
-                        ("payment".equals(type) && amount < 0)) {
-                    System.out.println(transaction);
-                }
-            }
+            transactions.stream()
+                    .filter(transaction -> filterTransaction(transaction, type))
+                    .forEach(System.out::println);
 
         } catch (IOException e) {
             System.out.println("Error reading the file.");
         }
     }
 
+    private static boolean filterTransaction(String transaction, String type) {
+        String[] parts = transaction.split("\\|");
+        double amount = Double.parseDouble(parts[4]);
+
+        return "all".equals(type) ||
+                ("deposit".equals(type) && amount > 0) ||
+                ("payment".equals(type) && amount < 0);
+    }
+
     public static void reportsScreen() {
         boolean running = true;
         while (running) {
-            System.out.println("Reports Screen");
-            System.out.println("1) Month To Date");
-            System.out.println("2) Previous Month");
-            System.out.println("3) Year To Date");
-            System.out.println("4) Previous Year");
-            System.out.println("5) Search by Vendor");
-            System.out.println("0) Back");
+            showReportsScreen();
             String choice = scanner.nextLine().toUpperCase();
 
             switch (choice) {
-                case "1":
-                    displayMonthToDate();
-                    break;
-                case "2":
-                    displayPreviousMonth();
-                    break;
-                case "3":
-                    displayYearToDate();
-                    break;
-                case "4":
-                    displayPreviousYear();
-                    break;
-                case "5":
-                    searchByVendor();
-                    break;
-                case "0":
-                    running = false;
-                    break;
-                default:
-                    System.out.println("Invalid option. Try again.");
+                case "1": displayMonthToDate(); break;
+                case "2": displayPreviousMonth(); break;
+                case "3": displayYearToDate(); break;
+                case "4": displayPreviousYear(); break;
+                case "5": searchByVendor(); break;
+                case "0": running = false; break;
+                default: System.out.println("Invalid option. Try again.");
             }
         }
     }
 
+    private static void showReportsScreen() {
+        System.out.println("Reports Screen");
+        System.out.println("1) Month To Date");
+        System.out.println("2) Previous Month");
+        System.out.println("3) Year To Date");
+        System.out.println("4) Previous Year");
+        System.out.println("5) Search by Vendor");
+        System.out.println("0) Back");
+    }
+
     public static void displayMonthToDate() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        String currentDate = sdf.format(new Date());
-        String currentMonth = currentDate.split("-")[1];
-        System.out.println("Displaying Month to Date transactions (current month: " + currentMonth + ")");
-        // Implement the logic to display the transactions for the current month
+        System.out.println("Displaying Month to Date transactions");
+        // Add logic for month-to-date transactions
     }
 
     public static void displayPreviousMonth() {
-        // Implement logic to display the transactions of the previous month
         System.out.println("Displaying Previous Month transactions");
+        // Add logic for previous month transactions
     }
 
     public static void displayYearToDate() {
-        // Implement logic to display the transactions from the start of the current year
         System.out.println("Displaying Year to Date transactions");
+        // Add logic for year-to-date transactions
     }
 
     public static void displayPreviousYear() {
-        // Implement logic to display the transactions of the previous year
         System.out.println("Displaying Previous Year transactions");
+        // Add logic for previous year transactions
     }
 
     public static void searchByVendor() {
