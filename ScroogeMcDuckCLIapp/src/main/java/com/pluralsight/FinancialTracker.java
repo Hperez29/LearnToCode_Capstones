@@ -11,6 +11,9 @@ public class FinancialTracker {
     private static final ReportService reportService = new ReportService(transactionService);
 
     public static void main(String[] args) {
+        showSplashScreen();     // Megaman splash banner
+        showMegamanIntro();     // Megaman loading animation
+
         boolean running = true;
         while (running) {
             System.out.println("\nHome Screen");
@@ -114,4 +117,59 @@ public class FinancialTracker {
             System.out.println("Invalid date. Skipping.");
             return null;
         }
-    }}
+    }
+
+    // 🎮 Megaman ASCII Splash
+    private static void showSplashScreen() {
+        System.out.println("""
+             ________  ________  ________  ________  ________  ________
+            |\\   __  \\|\\   __  \\|\\   __  \\|\\   __  \\|\\   __  \\|\\   ___  \\
+            \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\|\\  \\ \\  \\\\ \\  \\
+             \\ \\   ____\\ \\   __  \\ \\   ____\\ \\  \\\\\\  \\ \\   __  \\ \\  \\\\ \\  \\
+              \\ \\  \\___|\\ \\  \\ \\  \\ \\  \\___|\\ \\  \\\\\\  \\ \\  \\ \\  \\ \\  \\\\ \\  \\
+               \\ \\__\\    \\ \\__\\ \\__\\ \\__\\    \\ \\_______\\ \\__\\ \\__\\ \\__\\\\ \\__\\
+                \\|__|     \\|__|\\|__|\\|__|     \\|_______|\\|__|\\|__|\\|__| \\|__|
+
+              MEGAMAN.EXE - Financial Tracker System Booting...
+
+              Loading modules:
+              [█] TransactionService.EXE
+              [█] ReportService.EXE
+              [█] UI Modules
+              [█] Virus Scan... 0 threats found ✅
+
+              All systems GO. Jacking in!
+
+        """);
+    }
+
+    // 💥 Megaman loading animation
+    private static void showMegamanIntro() {
+        System.out.println("Initializing PET System...");
+        pause(500);
+        System.out.println("🔷 MEGAMAN.EXE - ONLINE 🔷");
+        pause(500);
+        System.out.println("📡 Connecting to Financial Tracker Mainframe...");
+        pause(700);
+        System.out.println("💻 Booting Transaction Modules...");
+        pause(600);
+        System.out.println("🧾 Loading Report Interfaces...");
+        pause(600);
+        System.out.println("🛡️ Running Virus Scan...");
+        pause(1000);
+        System.out.println("✅ All Clear! No threats found.");
+        pause(500);
+        System.out.println("\n🔌 Jacking In...");
+        pause(800);
+        System.out.println("💥 MEGAMAN.EXE Ready to bust bugs and balance books!\n");
+        pause(600);
+    }
+
+    private static void pause(int milliseconds) {
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+}
