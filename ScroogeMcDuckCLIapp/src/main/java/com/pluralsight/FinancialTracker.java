@@ -13,35 +13,20 @@ public class FinancialTracker {
     public static void main(String[] args) {
         boolean running = true;
         while (running) {
-            showHomeScreen();
+            System.out.println("\nHome Screen");
+            System.out.println("D) Add Deposit");
+            System.out.println("P) Make Payment");
+            System.out.println("L) Ledger");
+            System.out.println("X) Exit");
+
             switch (scanner.nextLine().toUpperCase()) {
-                case "D" -> addTransaction("deposit");
-                case "P" -> addTransaction("payment");
+                case "D" -> transactionService.addTransaction("deposit");
+                case "P" -> transactionService.addTransaction("payment");
                 case "L" -> ledgerScreen();
                 case "X" -> running = false;
                 default -> System.out.println("Invalid option.");
             }
         }
-    }
-
-    private static void showHomeScreen() {
-        System.out.println("\nHome Screen");
-        System.out.println("D) Add Deposit");
-        System.out.println("P) Make Payment");
-        System.out.println("L) Ledger");
-        System.out.println("X) Exit");
-    }
-
-    private static void addTransaction(String type) {
-        System.out.print("Enter description: ");
-        String description = scanner.nextLine();
-        String vendor = description.toLowerCase().contains("mcduck") ? "Scrooge McDuck"
-                : description.toLowerCase().contains("donald") ? "Donald Duck"
-                : description.toLowerCase().contains("goofy")  ? "Goofy"
-                : prompt("Enter vendor: ");
-        double amount = Double.parseDouble(prompt("Enter amount: "));
-        if (type.equals("payment")) amount *= -1;
-        transactionService.addTransaction(new Transaction(LocalDate.now(), java.time.LocalTime.now(), description, vendor, amount));
     }
 
     private static void ledgerScreen() {
@@ -83,7 +68,8 @@ public class FinancialTracker {
                 case "3" -> reportService.displayYearToDate();
                 case "4" -> reportService.displayPreviousYear();
                 case "5" -> {
-                    String vendor = prompt("Enter vendor to search:");
+                    System.out.print("Enter vendor: ");
+                    String vendor = scanner.nextLine();
                     transactionService.customSearch(null, null, null, vendor, null).forEach(System.out::println);
                 }
                 case "6" -> runCustomSearch();
@@ -95,6 +81,7 @@ public class FinancialTracker {
 
     private static void runCustomSearch() {
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
         LocalDate start = parseDate(prompt("Start Date (yyyy-MM-dd or blank): "), fmt);
         LocalDate end = parseDate(prompt("End Date (yyyy-MM-dd or blank): "), fmt);
         String desc = prompt("Description (or blank): ");
@@ -102,23 +89,29 @@ public class FinancialTracker {
         String amountStr = prompt("Amount (or blank): ");
         Double amount = amountStr.isEmpty() ? null : Double.parseDouble(amountStr);
 
-        List<Transaction> results = transactionService.customSearch(start, end, desc.isEmpty() ? null : desc, vendor.isEmpty() ? null : vendor, amount);
+        List<Transaction> results = transactionService.customSearch(
+                start,
+                end,
+                desc.isEmpty() ? null : desc,
+                vendor.isEmpty() ? null : vendor,
+                amount
+        );
+
         if (results.isEmpty()) System.out.println("No transactions found.");
         else results.forEach(System.out::println);
     }
 
-    private static String prompt(String message) {
-        System.out.print(message);
+    private static String prompt(String msg) {
+        System.out.print(msg);
         return scanner.nextLine();
     }
 
-    private static LocalDate parseDate(String input, DateTimeFormatter formatter) {
+    private static LocalDate parseDate(String input, DateTimeFormatter fmt) {
         if (input.isEmpty()) return null;
         try {
-            return LocalDate.parse(input, formatter);
+            return LocalDate.parse(input, fmt);
         } catch (Exception e) {
             System.out.println("Invalid date. Skipping.");
             return null;
         }
-    }
-}
+    }}
