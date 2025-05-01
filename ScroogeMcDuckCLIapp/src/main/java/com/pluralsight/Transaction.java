@@ -22,13 +22,18 @@ public class Transaction {
         String[] parts = line.split("\\|");
         if (parts.length < 5) return null;
 
-        LocalDate date = LocalDate.parse(parts[0]);
-        LocalTime time = LocalTime.parse(parts[1]);
-        String description = parts[2];
-        String vendor = parts[3];
-        double amount = Double.parseDouble(parts[4]);
+        try {
+            LocalDate date = LocalDate.parse(parts[0].trim());
+            LocalTime time = LocalTime.parse(parts[1].trim());
+            String description = parts[2].trim();
+            String vendor = parts[3].trim();
+            double amount = Double.parseDouble(parts[4].trim());
 
-        return new Transaction(date, time, description, vendor, amount);
+            return new Transaction(date, time, description, vendor, amount);
+        } catch (Exception e) {
+            System.out.println("Error parsing transaction: " + line);
+            return null;
+        }
     }
 
     public String toCsv() {
@@ -37,7 +42,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return String.format("%s %s | %-20s | %-15s | %.2f", date, time, description, vendor, amount);
+        return String.format("%s %s | %-20s | %-15s | %10.2f", date, time, description, vendor, amount);
     }
 
     // Getters
@@ -45,4 +50,5 @@ public class Transaction {
     public String getDescription() { return description; }
     public String getVendor() { return vendor; }
     public double getAmount() { return amount; }
+
 }
