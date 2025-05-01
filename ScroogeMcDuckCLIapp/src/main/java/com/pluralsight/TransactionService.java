@@ -100,5 +100,4 @@ public class TransactionService {
                              (vendor == null || t.getVendor().toLowerCase().contains(vendor.toLowerCase())) &&
                              (amount == null || t.getAmount() == amount))
                 .collect(Collectors.toList());
-    }
-}
+    }}
